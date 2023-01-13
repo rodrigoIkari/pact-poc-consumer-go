@@ -1,0 +1,1 @@
+# pact-poc-consumer-go
