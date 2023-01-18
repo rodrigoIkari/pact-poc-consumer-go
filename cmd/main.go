@@ -1,15 +1,16 @@
 package main
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gofiber/fiber/v2"
+	r "github.com/rodrigoikari/pact-poc-consumer-go/api"
+)
 
 func main() {
 	app := fiber.New()
 
-	app.Get("/", index)
+	api := app.Group("/api")
+	r.ConfigRoutes(api)
 
 	app.Listen(":3000")
-}
 
-func index(c *fiber.Ctx) error {
-	return c.SendString("Hello World")
 }
