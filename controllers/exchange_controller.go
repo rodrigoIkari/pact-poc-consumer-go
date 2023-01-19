@@ -7,8 +7,8 @@ import (
 func Convert(c *fiber.Ctx) error {
 
 	c.JSON(struct {
-		Amount float64
-		Asset  string
+		Amount float64 `json:"amount"`
+		Asset  string  `json:"asset"`
 	}{
 		Amount: 5.38,
 		Asset:  "BRL",
