@@ -7,6 +7,6 @@ import (
 )
 
 func ConfigRoutes(api fiber.Router) {
-	exchangeApi := api.Group("/exchange")
-	exchangeApi.Post("convert", controllers.Convert).Name("Convert Rate")
+	exchangeApi := api.Group("/checkout/")
+	exchangeApi.Post("simulation", controllers.SimulateCart).Name("Checkout Simulation")
 }
