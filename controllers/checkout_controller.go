@@ -28,5 +28,6 @@ func SimulateCart(c *fiber.Ctx) error {
 		return c.SendStatus(422)
 	}
 
+	fmt.Println("cart request accepted")
 	return c.JSON(cart)
 }
