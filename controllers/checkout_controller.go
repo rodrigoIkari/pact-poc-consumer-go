@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/rodrigoikari/pact-poc-consumer-go/models"
+	"github.com/rodrigoikari/pact-poc-consumer-go/services"
 )
 
 func SimulateCart(c *fiber.Ctx) error {
@@ -16,7 +17,7 @@ func SimulateCart(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString("Checkout Simulation: Bad Request")
 	}
 
-	errors := cart.Validate()
+	errors := services.Validate(cart)
 	if errors != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(errors)
 	}
