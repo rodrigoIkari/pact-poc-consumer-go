@@ -8,5 +8,8 @@ import (
 
 func ConfigRoutes(api fiber.Router) {
 	exchangeApi := api.Group("/checkout/")
-	exchangeApi.Post("simulation", controllers.SimulateCart).Name("Checkout Simulation")
+
+	ctl := new(controllers.CartController)
+
+	exchangeApi.Post("simulation", ctl.SimulateCart).Name("Checkout Simulation")
 }

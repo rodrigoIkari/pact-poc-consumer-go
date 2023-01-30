@@ -7,9 +7,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"github.com/rodrigoikari/pact-poc-consumer-go/models"
+	"github.com/rodrigoikari/pact-poc-consumer-go/services"
 )
 
-func SimulateCart(c *fiber.Ctx) error {
+type CartController struct {
+	currencyService *services.CurrencyService
+}
+
+func (ctl *CartController) SimulateCart(c *fiber.Ctx) error {
 
 	cart := new(models.CartRequest)
 
@@ -29,5 +34,14 @@ func SimulateCart(c *fiber.Ctx) error {
 	}
 
 	fmt.Println("cart request accepted")
+
+	fmt.Println("Calculating Cart Value ...")
+
+	ctl.CalculateCartValue()
+
 	return c.JSON(cart)
+}
+
+func (ctl *CartController) CalculateCartValue() (float64, error) {
+	return 0, nil
 }
