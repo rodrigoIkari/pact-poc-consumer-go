@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/pact-foundation/pact-go/dsl"
+	"github.com/rodrigoikari/pact-poc-consumer-go/models"
 	"github.com/rodrigoikari/pact-poc-consumer-go/services"
 )
 
@@ -27,6 +28,10 @@ func TestMain(m *testing.M) {
 
 	pact.Teardown()
 	os.Exit(exitCode)
+}
+
+var commonHeaders = dsl.MapMatcher{
+	"Content-Type": term("application/json; charset=utf-8", `application\/json`),
 }
 
 // Common test data
@@ -54,12 +59,117 @@ func setup() {
 
 }
 
+func TestCurrencyServicePact_ConvertCurrencyValue_Successfull(t *testing.T) {
+	t.Run("convert a value from original to destination currency succesfully", func(t *testing.T) {
+
+		sourceCurrencyCode := "USD"
+		destinationCurrencyCode := "BRL"
+		value := 15.0
+		convertedValue := 80.1
+		exchangeRate := 5.34
+
+		pact.
+			AddInteraction().
+			Given("USD to BRL exchange rate is updated to 5.34").
+			UponReceiving("A Request to convert 15.0 USD to BRL").
+			WithRequest(request{
+				Method: "POST",
+				Path:   term("/exchange/convert", "/exchange/convert"),
+				Body: models.ConvertCurrencyValueRequest{
+					SourceCurrencyCode:      sourceCurrencyCode,
+					DestinationCurrencyCode: destinationCurrencyCode,
+					Value:                   value,
+				},
+			}).
+			WillRespondWith(dsl.Response{
+				Status: 200,
+				Body: dsl.Match(models.ConvertCurrencyValueResponse{
+					SourceCurrencyCode:      sourceCurrencyCode,
+					DestinationCurrencyCode: destinationCurrencyCode,
+					Value:                   value,
+					ConvertedValue:          convertedValue,
+					ExchangeRate:            exchangeRate,
+				}),
+				Headers: commonHeaders,
+			})
+
+		err := pact.Verify(func() error {
+			cv, err := currency_service.ConvertCurrencyValue(value, sourceCurrencyCode, destinationCurrencyCode)
+
+			if err != nil {
+				return err
+			}
+			// Assert basic fact
+			if cv != convertedValue {
+				return fmt.Errorf("wanted converted value %v but got %v", convertedValue, cv)
+			}
+			return nil
+		})
+
+		if err != nil {
+			t.Fatalf("Error on Verify: %v", err)
+		}
+	})
+}
+
+func TestCurrencyServicePact_ConvertCurrencyValue_Error_TaxRateNotFound(t *testing.T) {
+
+	var response = struct {
+		Message string
+	}{
+		Message: "Currency Tax Rate not found for conversion",
+	}
+
+	t.Run("convert a value from original to destination currency when tax rate is not found", func(t *testing.T) {
+
+		sourceCurrencyCode := "USD"
+		destinationCurrencyCode := "ILS"
+		value := 15.0
+
+		pact.
+			AddInteraction().
+			Given("USD to ILS exchange rate is not found").
+			UponReceiving("A Request to convert 15.0 USD to ILS").
+			WithRequest(request{
+				Method: "POST",
+				Path:   term("/exchange/convert", "/exchange/convert"),
+				Body: models.ConvertCurrencyValueRequest{
+					SourceCurrencyCode:      sourceCurrencyCode,
+					DestinationCurrencyCode: destinationCurrencyCode,
+					Value:                   value,
+				},
+			}).
+			WillRespondWith(dsl.Response{
+				Status:  422,
+				Body:    dsl.Match(response),
+				Headers: commonHeaders,
+			})
+
+		err := pact.Verify(func() error {
+			cv, err := currency_service.ConvertCurrencyValue(value, sourceCurrencyCode, destinationCurrencyCode)
+
+			if err == nil {
+				return fmt.Errorf("expected error != nil")
+			}
+			// Assert basic fact
+			if cv != 0.0 {
+				return fmt.Errorf("wanted converted value 0.0 but got %v", cv)
+			}
+			return nil
+		})
+
+		if err != nil {
+			t.Fatalf("Error on Verify: %v", err)
+		}
+	})
+}
+
 func createPact() dsl.Pact {
 	return dsl.Pact{
-		Consumer: os.Getenv("CONSUMER_NAME"),
-		Provider: os.Getenv("PROVIDER_NAME"),
-		LogDir:   os.Getenv("LOG_DIR"),
-		PactDir:  os.Getenv("PACT_DIR"),
+		Consumer: "CartService",
+		Provider: "ExchangeService",
+		//LogDir:   os.Getenv("LOG_DIR"),
+		//PactDir:  os.Getenv("PACT_DIR"),
 		LogLevel: "INFO",
 	}
 }
