@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_Currency_Service_ConvertCurrencyValue(t *testing.T) {
+func Test_Currency_Service_ConvertCurrencyValue_Succesfully(t *testing.T) {
 	value := 15.0
 	sourceCurrencyCode := "USD"
 	destinationCurrencyCode := "BRL"
@@ -46,5 +46,31 @@ func Test_Currency_Service_ConvertCurrencyValue(t *testing.T) {
 	ca, err := currency_service.ConvertCurrencyValue(value, sourceCurrencyCode, destinationCurrencyCode)
 	assert.NoError(t, err)
 	assert.Equal(t, ca, convertedValue)
+
+}
+
+func Test_Currency_Service_ConvertCurrencyValue_Error_RateNotFound(t *testing.T) {
+	value := 15.0
+	sourceCurrencyCode := "USD"
+	destinationCurrencyCode := "ILS"
+
+	server := httptest.NewServer(http.HandlerFunc(
+		func(rw http.ResponseWriter, req *http.Request) {
+			assert.Equal(t, req.URL.String(), fmt.Sprintf("/exchange/convert"))
+
+			rw.WriteHeader(http.StatusUnprocessableEntity)
+
+		}))
+
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+
+	currency_service := services.CurrencyServiceImpl{
+		BaseUrl: u,
+	}
+
+	_, err := currency_service.ConvertCurrencyValue(value, sourceCurrencyCode, destinationCurrencyCode)
+	assert.Error(t, err)
 
 }
