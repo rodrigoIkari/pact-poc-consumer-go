@@ -83,7 +83,7 @@ func TestCurrencyServicePact_ConvertCurrencyValue_Successfull(t *testing.T) {
 			}).
 			WillRespondWith(dsl.Response{
 				Status: 200,
-				Body: dsl.Match(models.ConvertCurrencyValueResponse{
+				Body: dsl.Like(models.ConvertCurrencyValueResponse{
 					SourceCurrencyCode:      sourceCurrencyCode,
 					DestinationCurrencyCode: destinationCurrencyCode,
 					Value:                   value,
@@ -141,7 +141,7 @@ func TestCurrencyServicePact_ConvertCurrencyValue_Error_TaxRateNotFound(t *testi
 			}).
 			WillRespondWith(dsl.Response{
 				Status:  422,
-				Body:    dsl.Match(response),
+				Body:    dsl.Like(response),
 				Headers: commonHeaders,
 			})
 

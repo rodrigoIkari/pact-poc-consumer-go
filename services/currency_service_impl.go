@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -31,20 +32,24 @@ func (c *CurrencyServiceImpl) ConvertCurrencyValue(value float64, sourceCurrency
 	u := c.BaseUrl.ResolveReference(rel)
 	resp, err := http.DefaultClient.Post(u.String(), "application/json", reqBuffer)
 	if err != nil {
-		return 0, err
+		return 0.0, err
 	}
 
 	// Interpreta o Response
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return 0, err
+		return 0.0, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return 0.0, fmt.Errorf("conversion error: HttpStatusCode %v", resp.StatusCode)
+	}
 
 	var currencyResponse models.ConvertCurrencyValueResponse
 	err = json.Unmarshal(body, &currencyResponse)
 	if err != nil {
-		return 0, err
+		return 0.0, err
 	}
 
 	return currencyResponse.ConvertedValue, nil
